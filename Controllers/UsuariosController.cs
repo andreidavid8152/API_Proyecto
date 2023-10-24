@@ -75,7 +75,7 @@ namespace API_Proyecto.Controllers
 
                 await _db.Usuarios.AddAsync(usuario);
                 await _db.SaveChangesAsync();
-                return Ok(usuario);
+                return Ok("Registro exitoso");
 
             }
 
