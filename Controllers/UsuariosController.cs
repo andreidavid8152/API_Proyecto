@@ -2,6 +2,13 @@
 using API_Proyecto.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Authorization;
+
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -13,10 +20,12 @@ namespace API_Proyecto.Controllers
     {
 
         private readonly ReservacionesDbContext _db;
+        private readonly IConfiguration _configuration;
 
-        public UsuariosController(ReservacionesDbContext db)
+        public UsuariosController(ReservacionesDbContext db, IConfiguration configuration)
         {
             _db = db;
+            _configuration = configuration;
         }
 
         // POST api/<UsuariosController>/login
@@ -30,12 +39,10 @@ namespace API_Proyecto.Controllers
                 return BadRequest("Usuario no encontrado.");
             }
 
-            // Aquí deberías verificar la contraseña. 
-            // Por simplicidad, estoy haciendo una comparación directa, pero en un entorno real, deberías usar una verificación más segura.
             if (usuarioEncontrado.Password == loginModel.Password)
             {
-                // Inicio de sesión exitoso. Dependiendo de tu estructura, podrías devolver un token o simplemente confirmar el inicio de sesión.
-                return Ok("Inicio de sesión exitoso"); // O devuelve el token si implementas esa lógica.
+                var tokenString = GenerateJwtToken(usuarioEncontrado);
+                return Ok(new { token = tokenString });
             }
             else
             {
@@ -43,25 +50,31 @@ namespace API_Proyecto.Controllers
             }
         }
 
-
-        // GET: api/<UsuariosController>
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        private string GenerateJwtToken(Usuario usuario)
         {
-            List<Usuario> usuarios = await _db.Usuarios.ToListAsync();
-            return Ok(usuarios);
-        }
-
-        // GET api/<UsuariosController>/5
-        [HttpGet("{Id}")]
-        public async Task<IActionResult> Get(int Id)
-        {
-            Usuario usuario = await _db.Usuarios.FirstOrDefaultAsync(x => x.Id == Id);
-            if (usuario == null)
+            var claims = new List<Claim>
             {
-                return BadRequest("El usuario no ha sido encontrado.");
-            }
-            return Ok(usuario);
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()), // Si tu usuario tiene un campo Id
+                new Claim(ClaimTypes.Name, usuario.Username)
+                // Aquí puedes agregar más claims si lo necesitas.
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                //Expires = DateTime.UtcNow.AddHours(1), // Este token expira en 1 hora, puedes ajustarlo a tus necesidades.
+                SigningCredentials = creds,
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Issuer"]
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+
+            return tokenHandler.WriteToken(token);
         }
 
         // POST api/<UsuariosController>
@@ -131,5 +144,59 @@ namespace API_Proyecto.Controllers
             return BadRequest("El usuario no ha sido encontrado.");
 
         }
+
+        // GET api/<UsuariosController>/miperfil
+        [HttpGet("perfil")]
+        [Authorize]
+        public async Task<IActionResult> GetPerfil()
+        {
+            // Obtiene el claim del usuario actual
+            var claimUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(claimUserId))
+            {
+                return Unauthorized();
+            }
+
+            int userId;
+            if (!int.TryParse(claimUserId, out userId))
+            {
+                return BadRequest("Id de usuario inválido.");
+            }
+
+            Usuario usuario = await _db.Usuarios.FirstOrDefaultAsync(x => x.Id == userId);
+            if (usuario == null)
+            {
+                return NotFound("El usuario no ha sido encontrado.");
+            }
+            return Ok(usuario);
+        }
+
+
+        /*
+         
+            // GET: api/<UsuariosController>
+            [HttpGet]
+            public async Task<IActionResult> Get()
+            {
+                List<Usuario> usuarios = await _db.Usuarios.ToListAsync();
+                return Ok(usuarios);
+            }
+
+            // GET api/<UsuariosController>/5
+            [HttpGet("{Id}")]
+            public async Task<IActionResult> Get(int Id)
+            {
+                Usuario usuario = await _db.Usuarios.FirstOrDefaultAsync(x => x.Id == Id);
+                if (usuario == null)
+                {
+                    return BadRequest("El usuario no ha sido encontrado.");
+                }
+                return Ok(usuario);
+            }
+         
+        */
+
+
     }
 }
