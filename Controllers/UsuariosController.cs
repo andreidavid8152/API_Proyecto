@@ -79,71 +79,76 @@ namespace API_Proyecto.Controllers
 
         // POST api/<UsuariosController>
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Usuario usuario)
+        public async Task<IActionResult> Crear([FromBody] UserInputModel usuarioInput)
         {
-            Usuario usuarioEncontrado = await _db.Usuarios.FirstOrDefaultAsync(x => x.Username == usuario.Username);
+            Usuario usuarioEncontrado = await _db.Usuarios.FirstOrDefaultAsync(x => x.Username == usuarioInput.Username);
 
-            if (usuarioEncontrado == null && usuario != null)
+            if (usuarioEncontrado == null && usuarioInput != null)
             {
+                // Convertimos UserInputModel a Usuario
+                Usuario nuevoUsuario = new Usuario
+                {
+                    Nombre = usuarioInput.Nombre,
+                    Email = usuarioInput.Email,
+                    Username = usuarioInput.Username,
+                    Password = usuarioInput.Password
+                };
 
-                await _db.Usuarios.AddAsync(usuario);
+                await _db.Usuarios.AddAsync(nuevoUsuario);
                 await _db.SaveChangesAsync();
                 return Ok("Registro exitoso");
-
             }
 
             return BadRequest("El usuario ya existe.");
         }
 
-        // PUT api/<UsuariosController>/5
-        [HttpPut("{Id}")]
-        public async Task<IActionResult> Put(int Id, [FromBody] Usuario usuario)
+        // PUT api/<UsuariosController>/editarperfil
+        [HttpPut("editarperfil")]
+        [Authorize]
+        public async Task<IActionResult> Editar([FromBody] UserInputModel usuario)
         {
+            // Obtiene el claim del usuario actual
+            var claimUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            Usuario usuarioEncontrado = await _db.Usuarios.FirstOrDefaultAsync(x => x.Id == Id);
-
-            if (usuarioEncontrado != null)
+            if (string.IsNullOrEmpty(claimUserId))
             {
-
-                bool usernameExiste = await _db.Usuarios.AnyAsync(x => x.Username == usuario.Username);
-                if (usernameExiste)
-                {
-                    return BadRequest("El nombre de usuario ya está en uso.");
-                }
-
-                usuarioEncontrado.Username = usuario.Username != null ? usuario.Username : usuarioEncontrado.Username;
-                usuarioEncontrado.Password = usuario.Password != null ? usuario.Password : usuarioEncontrado.Password;
-                usuarioEncontrado.Nombre = usuario.Nombre != null ? usuario.Nombre : usuarioEncontrado.Nombre;
-                usuarioEncontrado.Email = usuario.Email != null ? usuario.Email : usuarioEncontrado.Email;
-
-                _db.Update(usuarioEncontrado);
-                await _db.SaveChangesAsync();
-                return Ok(usuarioEncontrado);
+                return Unauthorized();
             }
 
-
-            return BadRequest("El usuario no ha sido encontrado.");
-
-        }
-
-        // DELETE api/<UsuariosController>/5
-        [HttpDelete("{Id}")]
-        public async Task<IActionResult> Delete(int Id)
-        {
-
-            Usuario usuario = await _db.Usuarios.FirstOrDefaultAsync(x => x.Id == Id);
-
-
-            if (usuario != null)
+            int userId;
+            if (!int.TryParse(claimUserId, out userId))
             {
-                _db.Usuarios.Remove(usuario);
-                await _db.SaveChangesAsync();
-                return NoContent();
+                return BadRequest("Id de usuario inválido.");
             }
 
-            return BadRequest("El usuario no ha sido encontrado.");
+            Usuario usuarioEncontrado = await _db.Usuarios.FirstOrDefaultAsync(x => x.Id == userId);
 
+            if (usuarioEncontrado == null)
+            {
+                return NotFound("El usuario no ha sido encontrado.");
+            }
+
+            // Antes de cambiar el nombre de usuario, verifica si el nuevo nombre de usuario ya está en uso
+            // pero excluye al propio usuario de esta comprobación.
+            bool usernameExiste = await _db.Usuarios.AnyAsync(x => x.Username == usuario.Username && x.Id != userId);
+            if (usernameExiste)
+            {
+                return BadRequest("El nombre de usuario ya está en uso.");
+            }
+
+            usuarioEncontrado.Username = usuario.Username != null ? usuario.Username : usuarioEncontrado.Username;
+            usuarioEncontrado.Password = !string.IsNullOrWhiteSpace(usuario.Password) && !usuario.Password.All(c => c == '*')
+                ? usuario.Password
+                : usuarioEncontrado.Password;
+            usuarioEncontrado.Nombre = usuario.Nombre != null ? usuario.Nombre : usuarioEncontrado.Nombre;
+            usuarioEncontrado.Email = usuario.Email != null ? usuario.Email : usuarioEncontrado.Email;
+
+            _db.Update(usuarioEncontrado);
+            await _db.SaveChangesAsync();
+
+            return Ok(usuarioEncontrado);
         }
+
 
         // GET api/<UsuariosController>/miperfil
         [HttpGet("perfil")]
@@ -171,32 +176,6 @@ namespace API_Proyecto.Controllers
             }
             return Ok(usuario);
         }
-
-
-        /*
-         
-            // GET: api/<UsuariosController>
-            [HttpGet]
-            public async Task<IActionResult> Get()
-            {
-                List<Usuario> usuarios = await _db.Usuarios.ToListAsync();
-                return Ok(usuarios);
-            }
-
-            // GET api/<UsuariosController>/5
-            [HttpGet("{Id}")]
-            public async Task<IActionResult> Get(int Id)
-            {
-                Usuario usuario = await _db.Usuarios.FirstOrDefaultAsync(x => x.Id == Id);
-                if (usuario == null)
-                {
-                    return BadRequest("El usuario no ha sido encontrado.");
-                }
-                return Ok(usuario);
-            }
-         
-        */
-
 
     }
 }

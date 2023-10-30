@@ -14,5 +14,10 @@ namespace API_Proyecto.Models
         public string Nombre { get; set; } // El nombre real del usuario.
         [Required]
         public string Email { get; set; } // El correo electrónico del usuario.
+
+        public ICollection<Local> Locales { get; set; }
+        public ICollection<Reserva> Reservas { get; set; }
+        public ICollection<Comentario> Comentarios { get; set; }
+
     }
 }
