@@ -18,11 +18,11 @@ namespace API_Proyecto.Models
 
         // Relaciones
         [ForeignKey("LocalID")]
-        public Local Local { get; set; }
+        public Local? Local { get; set; }
         [ForeignKey("UsuarioID")]
-        public Usuario Usuario { get; set; }
+        public Usuario? Usuario { get; set; }
         [ForeignKey("HorarioID")]
-        public Horario Horario { get; set; }
+        public Horario? Horario { get; set; }
 
 
     }

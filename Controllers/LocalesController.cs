@@ -66,7 +66,10 @@ namespace API_Proyecto.Controllers
                 return BadRequest("Id de usuario inválido.");
             }
 
-            List<Local> locales = await _db.Locales.Where(local => local.PropietarioID == userId).ToListAsync();
+            List<Local> locales = await _db.Locales
+                .Where(local => local.PropietarioID == userId)
+                .Include(local => local.Imagenes) // Incluye la relación Imagenes
+                .ToListAsync();
             return Ok(locales);
         }
 
