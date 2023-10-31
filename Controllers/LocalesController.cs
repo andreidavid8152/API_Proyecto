@@ -40,7 +40,10 @@ namespace API_Proyecto.Controllers
                 return BadRequest("Id de usuario inválido.");
             }
 
-            List<Local> locales = await _db.Locales.Where(local => local.PropietarioID != userId).ToListAsync();
+            List<Local> locales = await _db.Locales
+                .Where(local => local.PropietarioID != userId)
+                .Include(local => local.Imagenes) // Incluye la relación Imagenes
+                .ToListAsync();
             return Ok(locales);
         }
 
@@ -72,7 +75,10 @@ namespace API_Proyecto.Controllers
         [Authorize]
         public async Task<IActionResult> ObtenerLocalCliente(int id)
         {
-            var localEncontrado = await _db.Locales.FindAsync(id);  // Buscar el local por su id. 
+            var localEncontrado = await _db.Locales
+                                           .Include(l => l.Horarios)  // Aquí traes también los horarios relacionados con ese local
+                                           .Include(l => l.Imagenes)
+                                           .FirstOrDefaultAsync(l => l.ID == id);
 
             if (localEncontrado != null)
             {
@@ -106,5 +112,66 @@ namespace API_Proyecto.Controllers
             // ... Eliminar un local
             return null;
         }
+
+        [HttpPatch("AddHorarios/{localId}")]
+        [Authorize]
+        public async Task<IActionResult> AddHorarios(int localId, [FromBody] List<Horario> horarios)
+        {
+            var localExistente = await _db.Locales
+                .Include(l => l.Horarios) // Asegúrate de cargar las relaciones existentes
+                .FirstOrDefaultAsync(l => l.ID == localId);
+
+            if (localExistente == null)
+            {
+                return NotFound();
+            }
+
+            foreach (var horario in horarios)
+            {
+                horario.Local = localExistente; // Asignas el local al horario
+
+                // Aquí añades cada nuevo horario a la tabla de horarios
+                await _db.Horarios.AddAsync(horario);
+
+                // Y aquí agregas la relación al Local
+                localExistente.Horarios.Add(horario);
+            }
+
+            await _db.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpPatch("AddImagenes/{localId}")]
+        [Authorize]
+        public async Task<IActionResult> AddImagenesLocal(int localId, [FromBody] List<ImagenLocal> imagenes)
+        {
+
+            var localExistente = await _db.Locales
+                                        .Include(l => l.Imagenes) // Cargamos las relaciones de imágenes existentes
+                                        .FirstOrDefaultAsync(l => l.ID == localId);
+
+            if (localExistente == null)
+            {
+                return NotFound();
+            }
+
+            foreach (var imagen in imagenes)
+            {
+                imagen.Local = localExistente; // Asignas el local a la imagen
+
+                // Aquí añades cada nueva imagen a la tabla de ImagenesLocales
+                await _db.ImagenesLocal.AddAsync(imagen);
+
+                // Y aquí agregas la relación al Local
+                localExistente.Imagenes.Add(imagen);
+            }
+
+            await _db.SaveChangesAsync();
+
+            return Ok();
+
+        }
+
     }
 }

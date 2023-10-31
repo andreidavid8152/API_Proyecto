@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API_Proyecto.Models
 {
@@ -16,8 +17,13 @@ namespace API_Proyecto.Models
         public DateTime Fecha { get; set; }
 
         // Relaciones
+        [ForeignKey("LocalID")]
         public Local Local { get; set; }
+        [ForeignKey("UsuarioID")]
         public Usuario Usuario { get; set; }
+        [ForeignKey("HorarioID")]
+        public Horario Horario { get; set; }
+
 
     }
 }

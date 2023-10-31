@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace API_Proyecto.Models
 {
@@ -12,6 +13,7 @@ namespace API_Proyecto.Models
         public int LocalID { get; set; } // El ID del local al que pertenece la imagen.
 
         // Relación
-        public Local Local { get; set; }
+        [JsonIgnore]
+        public Local? Local { get; set; }
     }
 }

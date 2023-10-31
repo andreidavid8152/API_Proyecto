@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace API_Proyecto.Models
 {
@@ -15,6 +16,7 @@ namespace API_Proyecto.Models
         public TimeSpan HoraFin { get; set; }
 
         // Relaciones
-        public Local Local { get; set; }
+        [JsonIgnore]
+        public Local? Local { get; set; }
     }
 }
