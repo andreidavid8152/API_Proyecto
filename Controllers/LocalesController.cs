@@ -44,7 +44,30 @@ namespace API_Proyecto.Controllers
             return Ok(locales);
         }
 
-        // GET: api/Locales/5
+        // GET: api/Locales/Arrendador/5
+        [HttpGet("Arrendador")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerLocalesArrendador()
+        {
+            // Obtiene el claim del usuario actual
+            var claimUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(claimUserId))
+            {
+                return Unauthorized();
+            }
+
+            int userId;
+            if (!int.TryParse(claimUserId, out userId))
+            {
+                return BadRequest("Id de usuario inválido.");
+            }
+
+            List<Local> locales = await _db.Locales.Where(local => local.PropietarioID == userId).ToListAsync();
+            return Ok(locales);
+        }
+
+        // GET: api/Locales/Cliente/5
         [HttpGet("Cliente/{id}")]
         [Authorize]
         public async Task<IActionResult> ObtenerLocalCliente(int id)
