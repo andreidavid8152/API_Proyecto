@@ -9,6 +9,7 @@ namespace API_Proyecto.Data
         public ReservacionesDbContext(DbContextOptions<ReservacionesDbContext> options) : base(options)
         { }
 
+        //Tablas de la base de datos
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Local> Locales { get; set; }
         public DbSet<Reserva> Reservas { get; set; }
