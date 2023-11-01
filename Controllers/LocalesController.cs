@@ -136,7 +136,7 @@ namespace API_Proyecto.Controllers
         }
 
         // Añade horarios al local.
-        [HttpPatch("AddHorarios/{localId}")]
+        [HttpPost("AddHorarios/{localId}")]
         [Authorize]
         public async Task<IActionResult> AddHorarios(int localId, [FromBody] List<Horario> horarios)
         {
@@ -163,7 +163,7 @@ namespace API_Proyecto.Controllers
         }
 
         // Añade imágenes al local.
-        [HttpPatch("AddImagenes/{localId}")]
+        [HttpPost("AddImagenes/{localId}")]
         [Authorize]
         public async Task<IActionResult> AddImagenesLocal(int localId, [FromBody] List<ImagenLocal> imagenes)
         {

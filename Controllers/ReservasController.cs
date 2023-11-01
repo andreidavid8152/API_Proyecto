@@ -97,5 +97,25 @@ namespace API_Proyecto.Controllers
             return Ok(!existeReserva);
         }
 
+        // Ruta para comentar una reserva
+        [HttpPost("comentar")]
+        [Authorize]
+        public async Task<IActionResult> ComentarReserva([FromBody] Comentario comentario)
+        {
+            // Verificamos que el comentario no sea nulo
+            if (comentario == null)
+            {
+                return BadRequest("Datos inválidos.");
+            }
+
+            // Añadimos el comentario a la base de datos
+            await _db.Comentarios.AddAsync(comentario);
+
+            // Guardamos los cambios en la base de datos
+            await _db.SaveChangesAsync();
+
+            return Ok("Comentario añadido con éxito.");
+
+        }
     }
 }

@@ -18,7 +18,7 @@ namespace API_Proyecto.Models
         public int Calificacion { get; set; }
 
         // Relaciones
-        public Local Local { get; set; }
-        public Usuario Usuario { get; set; }
+        public Local? Local { get; set; }
+        public Usuario? Usuario { get; set; }
     }
 }
