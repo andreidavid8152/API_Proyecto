@@ -73,10 +73,10 @@ namespace API_Proyecto.Controllers
             return Ok(locales);
         }
 
-        // GET: api/Locales/Cliente/5
-        [HttpGet("Cliente/{id}")]
+        // GET: api/Locales/5
+        [HttpGet("{id}")]
         [Authorize]
-        public async Task<IActionResult> ObtenerLocalCliente(int id)
+        public async Task<IActionResult> ObtenerLocal(int id)
         {
             var localEncontrado = await _db.Locales
                                            .Include(l => l.Horarios)  // Aquí traes también los horarios relacionados con ese local
@@ -102,18 +102,28 @@ namespace API_Proyecto.Controllers
 
         // PUT: api/Locales/5
         [HttpPut("{id}")]
-        public IActionResult EditarLocal(int id, [FromBody] Local local)
+        [Authorize]
+        public async Task<IActionResult> EditarLocal([FromBody] Local local)
         {
-            // ... Actualizar un local
-            return null;
-        }
+            // Busca el local en la base de datos usando el ID
+            var localExistente = await _db.Locales.FirstOrDefaultAsync(x => x.ID == local.ID);
 
-        // DELETE: api/Locales/5
-        [HttpDelete("{id}")]
-        public IActionResult EliminarLocal(int id)
-        {
-            // ... Eliminar un local
-            return null;
+            if (localExistente == null)
+            {
+                return NotFound(); // Retorna 404 si el local no se encuentra
+            }
+
+            // Actualiza sólo los campos que tienen valor
+            localExistente.Nombre = local.Nombre != null ? local.Nombre : localExistente.Nombre;
+            localExistente.Descripcion = local.Descripcion != null ? local.Descripcion : localExistente.Descripcion;
+            localExistente.Direccion = local.Direccion != null ? local.Direccion : localExistente.Direccion;
+            localExistente.Capacidad = local.Capacidad != 0 ? local.Capacidad : localExistente.Capacidad;
+
+
+            // Guarda los cambios
+            await _db.SaveChangesAsync();
+
+            return NoContent(); // Retorna 204, indicando que la operación fue exitosa pero no hay contenido para retornar
         }
 
         [HttpPatch("AddHorarios/{localId}")]
@@ -175,6 +185,72 @@ namespace API_Proyecto.Controllers
             return Ok();
 
         }
+
+        // PUT: api/Locales/Imagenes/5
+        [HttpPut("Imagenes/Edit/{localId}")]
+        [Authorize]
+        public async Task<IActionResult> EditarImagenesLocal(int localId, [FromBody] List<ImagenLocal> imagenesNuevas)
+        {
+            var localExistente = await _db.Locales
+                                        .Include(l => l.Imagenes) // Cargamos las imágenes existentes
+                                        .FirstOrDefaultAsync(l => l.ID == localId);
+
+            if (localExistente == null)
+            {
+                return NotFound(); // Retorna 404 si el local no se encuentra
+            }
+
+            // Elimina las imágenes antiguas del local
+            _db.ImagenesLocal.RemoveRange(localExistente.Imagenes);
+
+            // Añade las nuevas imágenes
+            foreach (var imagen in imagenesNuevas)
+            {
+                // Aquí, puedes asignar el ID del local a cada nueva imagen, 
+                // aunque no sea estrictamente necesario si usas Entity Framework correctamente.
+                imagen.Local = localExistente;
+
+                // Añade cada nueva imagen a la tabla de ImagenesLocales
+                await _db.ImagenesLocal.AddAsync(imagen);
+            }
+
+            // Guarda los cambios
+            await _db.SaveChangesAsync();
+
+            return Ok(); // Retorna 200, indicando éxito en la operación
+        }
+
+        // DELETE: api/Locales/5
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> EliminarLocal(int id)
+        {
+            // Busca el local en la base de datos usando el ID
+            var localExistente = await _db.Locales
+                                           .Include(l => l.Reservas)  // Cargamos las reservas existentes para ese local
+                                           .FirstOrDefaultAsync(l => l.ID == id);
+
+            // Si el local no se encuentra, retornamos 404
+            if (localExistente == null)
+            {
+                return NotFound();
+            }
+
+            // Si el local tiene reservas, no se puede eliminar
+            if (localExistente.Reservas != null && localExistente.Reservas.Count > 0)
+            {
+                return BadRequest("No se puede eliminar el local porque tiene reservas.");
+            }
+
+            // Elimina el local
+            _db.Locales.Remove(localExistente);
+
+            // Guarda los cambios
+            await _db.SaveChangesAsync();
+
+            return Ok("Local eliminado con éxito.");
+        }
+
 
     }
 }
