@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace API_Proyecto.Migrations
 {
     /// <inheritdoc />
-    public partial class CreacionTablas : Migration
+    public partial class Creacion_tablas : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -135,28 +137,68 @@ namespace API_Proyecto.Migrations
                 {
                     table.PrimaryKey("PK_Reservas", x => x.ID);
                     table.ForeignKey(
+                        name: "FK_Reservas_Horarios_HorarioID",
+                        column: x => x.HorarioID,
+                        principalTable: "Horarios",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_Reservas_Locales_LocalID",
                         column: x => x.LocalID,
                         principalTable: "Locales",
-                        principalColumn: "ID",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "ID");
                     table.ForeignKey(
                         name: "FK_Reservas_Usuarios_UsuarioID",
                         column: x => x.UsuarioID,
                         principalTable: "Usuarios",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.InsertData(
                 table: "Usuarios",
                 columns: new[] { "Id", "Email", "Nombre", "Password", "Username" },
-                values: new object[] { 1, "andrei@gmail.com", "Andrei", "2003", "admin" });
+                values: new object[,]
+                {
+                    { 1, "admin@gmail.com", "administrador", "2003", "admin" },
+                    { 2, "andrei@gmail.com", "andrei", "2003", "andrei" }
+                });
 
             migrationBuilder.InsertData(
                 table: "Locales",
                 columns: new[] { "ID", "Capacidad", "Descripcion", "Direccion", "Nombre", "PropietarioID" },
-                values: new object[] { 1, 50, "Una descripción para mi local", "Calle Falsa 123", "Mi Local", 1 });
+                values: new object[,]
+                {
+                    { 1, 50, "Cafetería con ambiente acogedor y música en vivo.", "Avenida Siempre Viva 742", "Café Central", 1 },
+                    { 2, 20, "Espacio cultural con selección de libros de autores independientes.", "Calle Literaria 101", "Librería Letras", 2 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Horarios",
+                columns: new[] { "ID", "HoraFin", "HoraInicio", "LocalID" },
+                values: new object[,]
+                {
+                    { 1, new TimeSpan(0, 12, 0, 0, 0), new TimeSpan(0, 8, 0, 0, 0), 1 },
+                    { 2, new TimeSpan(0, 16, 0, 0, 0), new TimeSpan(0, 14, 0, 0, 0), 1 },
+                    { 3, new TimeSpan(0, 20, 0, 0, 0), new TimeSpan(0, 18, 0, 0, 0), 1 },
+                    { 4, new TimeSpan(0, 23, 59, 0, 0), new TimeSpan(0, 22, 0, 0, 0), 1 },
+                    { 5, new TimeSpan(0, 12, 0, 0, 0), new TimeSpan(0, 8, 0, 0, 0), 2 },
+                    { 6, new TimeSpan(0, 16, 0, 0, 0), new TimeSpan(0, 14, 0, 0, 0), 2 },
+                    { 7, new TimeSpan(0, 20, 0, 0, 0), new TimeSpan(0, 18, 0, 0, 0), 2 },
+                    { 8, new TimeSpan(0, 23, 59, 0, 0), new TimeSpan(0, 22, 0, 0, 0), 2 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "ImagenesLocal",
+                columns: new[] { "ID", "LocalID", "Url" },
+                values: new object[,]
+                {
+                    { 1, 1, "https://img10.naventcdn.com/avisos/resize/9/01/41/76/97/06/1200x1200/1130234069.jpg" },
+                    { 2, 1, "https://img10.naventcdn.com/avisos/resize/9/01/41/76/97/06/1200x1200/1130234070.jpg" },
+                    { 3, 1, "https://img10.naventcdn.com/avisos/resize/9/01/41/76/97/06/1200x1200/1130234071.jpg" },
+                    { 4, 2, "https://img10.naventcdn.com/avisos/resize/9/00/91/40/78/30/1200x1200/1121170509.jpg" },
+                    { 5, 2, "https://img10.naventcdn.com/avisos/resize/9/00/91/40/78/30/1200x1200/1121170504.jpg" },
+                    { 6, 2, "https://img10.naventcdn.com/avisos/resize/9/00/91/40/78/30/1200x1200/1121170505.jpg" }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Comentarios_LocalID",
@@ -184,6 +226,11 @@ namespace API_Proyecto.Migrations
                 column: "PropietarioID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Reservas_HorarioID",
+                table: "Reservas",
+                column: "HorarioID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Reservas_LocalID",
                 table: "Reservas",
                 column: "LocalID");
@@ -201,13 +248,13 @@ namespace API_Proyecto.Migrations
                 name: "Comentarios");
 
             migrationBuilder.DropTable(
-                name: "Horarios");
-
-            migrationBuilder.DropTable(
                 name: "ImagenesLocal");
 
             migrationBuilder.DropTable(
                 name: "Reservas");
+
+            migrationBuilder.DropTable(
+                name: "Horarios");
 
             migrationBuilder.DropTable(
                 name: "Locales");

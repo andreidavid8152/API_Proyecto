@@ -45,7 +45,7 @@ namespace API_Proyecto.Controllers
             {
                 return BadRequest("Id de usuario inválido.");
             }
-            
+
             // Obtenemos las reservas del usuario
             var reservas = await _db.Reservas
                .Where(reserva => reserva.UsuarioID == userId)
@@ -117,5 +117,29 @@ namespace API_Proyecto.Controllers
             return Ok("Comentario añadido con éxito.");
 
         }
+
+        // Ruta para eliminar una reserva
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> EliminarReserva(int id)
+        {
+            // Buscamos la reserva por ID
+            var reserva = await _db.Reservas.FindAsync(id);
+
+            // Si no encontramos la reserva, devolvemos un error 404
+            if (reserva == null)
+            {
+                return NotFound("Reserva no encontrada.");
+            }
+
+            // Eliminamos la reserva de la base de datos
+            _db.Reservas.Remove(reserva);
+
+            // Guardamos los cambios en la base de datos
+            await _db.SaveChangesAsync();
+
+            return Ok("Reserva eliminada con éxito.");
+        }
+
     }
 }

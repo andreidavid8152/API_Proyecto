@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace API_Proyecto.Migrations
 {
     [DbContext(typeof(ReservacionesDbContext))]
-    [Migration("20231030000545_CreacionTablas")]
-    partial class CreacionTablas
+    [Migration("20231208094419_Creacion_tablas")]
+    partial class Creacion_tablas
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -80,6 +80,64 @@ namespace API_Proyecto.Migrations
                     b.HasIndex("LocalID");
 
                     b.ToTable("Horarios");
+
+                    b.HasData(
+                        new
+                        {
+                            ID = 1,
+                            HoraFin = new TimeSpan(0, 12, 0, 0, 0),
+                            HoraInicio = new TimeSpan(0, 8, 0, 0, 0),
+                            LocalID = 1
+                        },
+                        new
+                        {
+                            ID = 2,
+                            HoraFin = new TimeSpan(0, 16, 0, 0, 0),
+                            HoraInicio = new TimeSpan(0, 14, 0, 0, 0),
+                            LocalID = 1
+                        },
+                        new
+                        {
+                            ID = 3,
+                            HoraFin = new TimeSpan(0, 20, 0, 0, 0),
+                            HoraInicio = new TimeSpan(0, 18, 0, 0, 0),
+                            LocalID = 1
+                        },
+                        new
+                        {
+                            ID = 4,
+                            HoraFin = new TimeSpan(0, 23, 59, 0, 0),
+                            HoraInicio = new TimeSpan(0, 22, 0, 0, 0),
+                            LocalID = 1
+                        },
+                        new
+                        {
+                            ID = 5,
+                            HoraFin = new TimeSpan(0, 12, 0, 0, 0),
+                            HoraInicio = new TimeSpan(0, 8, 0, 0, 0),
+                            LocalID = 2
+                        },
+                        new
+                        {
+                            ID = 6,
+                            HoraFin = new TimeSpan(0, 16, 0, 0, 0),
+                            HoraInicio = new TimeSpan(0, 14, 0, 0, 0),
+                            LocalID = 2
+                        },
+                        new
+                        {
+                            ID = 7,
+                            HoraFin = new TimeSpan(0, 20, 0, 0, 0),
+                            HoraInicio = new TimeSpan(0, 18, 0, 0, 0),
+                            LocalID = 2
+                        },
+                        new
+                        {
+                            ID = 8,
+                            HoraFin = new TimeSpan(0, 23, 59, 0, 0),
+                            HoraInicio = new TimeSpan(0, 22, 0, 0, 0),
+                            LocalID = 2
+                        });
                 });
 
             modelBuilder.Entity("API_Proyecto.Models.ImagenLocal", b =>
@@ -102,6 +160,44 @@ namespace API_Proyecto.Migrations
                     b.HasIndex("LocalID");
 
                     b.ToTable("ImagenesLocal");
+
+                    b.HasData(
+                        new
+                        {
+                            ID = 1,
+                            LocalID = 1,
+                            Url = "https://img10.naventcdn.com/avisos/resize/9/01/41/76/97/06/1200x1200/1130234069.jpg"
+                        },
+                        new
+                        {
+                            ID = 2,
+                            LocalID = 1,
+                            Url = "https://img10.naventcdn.com/avisos/resize/9/01/41/76/97/06/1200x1200/1130234070.jpg"
+                        },
+                        new
+                        {
+                            ID = 3,
+                            LocalID = 1,
+                            Url = "https://img10.naventcdn.com/avisos/resize/9/01/41/76/97/06/1200x1200/1130234071.jpg"
+                        },
+                        new
+                        {
+                            ID = 4,
+                            LocalID = 2,
+                            Url = "https://img10.naventcdn.com/avisos/resize/9/00/91/40/78/30/1200x1200/1121170509.jpg"
+                        },
+                        new
+                        {
+                            ID = 5,
+                            LocalID = 2,
+                            Url = "https://img10.naventcdn.com/avisos/resize/9/00/91/40/78/30/1200x1200/1121170504.jpg"
+                        },
+                        new
+                        {
+                            ID = 6,
+                            LocalID = 2,
+                            Url = "https://img10.naventcdn.com/avisos/resize/9/00/91/40/78/30/1200x1200/1121170505.jpg"
+                        });
                 });
 
             modelBuilder.Entity("API_Proyecto.Models.Local", b =>
@@ -141,10 +237,19 @@ namespace API_Proyecto.Migrations
                         {
                             ID = 1,
                             Capacidad = 50,
-                            Descripcion = "Una descripción para mi local",
-                            Direccion = "Calle Falsa 123",
-                            Nombre = "Mi Local",
+                            Descripcion = "Cafetería con ambiente acogedor y música en vivo.",
+                            Direccion = "Avenida Siempre Viva 742",
+                            Nombre = "Café Central",
                             PropietarioID = 1
+                        },
+                        new
+                        {
+                            ID = 2,
+                            Capacidad = 20,
+                            Descripcion = "Espacio cultural con selección de libros de autores independientes.",
+                            Direccion = "Calle Literaria 101",
+                            Nombre = "Librería Letras",
+                            PropietarioID = 2
                         });
                 });
 
@@ -169,6 +274,8 @@ namespace API_Proyecto.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("ID");
+
+                    b.HasIndex("HorarioID");
 
                     b.HasIndex("LocalID");
 
@@ -209,10 +316,18 @@ namespace API_Proyecto.Migrations
                         new
                         {
                             Id = 1,
-                            Email = "andrei@gmail.com",
-                            Nombre = "Andrei",
+                            Email = "admin@gmail.com",
+                            Nombre = "administrador",
                             Password = "2003",
                             Username = "admin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Email = "andrei@gmail.com",
+                            Nombre = "andrei",
+                            Password = "2003",
+                            Username = "andrei"
                         });
                 });
 
@@ -270,17 +385,25 @@ namespace API_Proyecto.Migrations
 
             modelBuilder.Entity("API_Proyecto.Models.Reserva", b =>
                 {
+                    b.HasOne("API_Proyecto.Models.Horario", "Horario")
+                        .WithMany()
+                        .HasForeignKey("HorarioID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("API_Proyecto.Models.Local", "Local")
                         .WithMany("Reservas")
                         .HasForeignKey("LocalID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("API_Proyecto.Models.Usuario", "Usuario")
                         .WithMany("Reservas")
                         .HasForeignKey("UsuarioID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("Horario");
 
                     b.Navigation("Local");
 

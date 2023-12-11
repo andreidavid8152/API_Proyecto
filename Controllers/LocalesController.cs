@@ -1,4 +1,5 @@
 ﻿using API_Proyecto.Data;
+using API_Proyecto.DTOs;
 using API_Proyecto.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -47,7 +48,6 @@ namespace API_Proyecto.Controllers
 
             // Devuelve los locales como respuesta válida
             return Ok(locales);
-
         }
 
         // Obtiene los locales que SÍ son del usuario actual.
@@ -157,6 +157,110 @@ namespace API_Proyecto.Controllers
                 localExistente.Horarios.Add(horario);
             }
 
+            await _db.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        // Obtiene las imagenes de un local específico por su ID.
+        [HttpGet("imageneslocal/{id}")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerImagenesLocal(int id)
+        {
+
+            // Busca en la base de datos un local con el ID específico, incluye los horarios e imágenes del local en la búsqueda
+            var imagenesLocal = await _db.Locales
+                .Include(l => l.Imagenes)
+                .FirstOrDefaultAsync(l => l.ID == id);
+            
+            // Si no encuentra el local, devuelve "NotFound"
+            if (imagenesLocal == null) return NotFound();
+
+            // Mapea las entidades Imagen a ImagenLocalDTO
+            var imagenesDTO = imagenesLocal.Imagenes
+                .Select(i => new ImagenLocalDTO
+                {
+                    ID = i.ID,
+                    Url = i.Url
+                    // Añade aquí más propiedades si tu ImagenLocalDTO tiene más campos
+                }).ToList();
+
+            // Si encuentra el local, lo devuelve como respuesta válida
+            return Ok(imagenesDTO);
+
+        }
+
+        // Obtiene los horarios de un local específico por su ID.
+        [HttpGet("horarioslocal/{id}")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerHorariosLocal(int id)
+        {
+
+            // Busca en la base de datos un local con el ID específico, incluye los horarios en la búsqueda
+            var localConHorarios = await _db.Locales
+                .Include(l => l.Horarios)
+                .FirstOrDefaultAsync(l => l.ID == id);
+
+            // Si no encuentra el local, devuelve "NotFound"
+            if (localConHorarios == null)
+            {
+                return NotFound($"No se encontró un local con el ID {id}.");
+            }
+
+            // Mapea las entidades horarios de los locales a HorarioDTO
+            var horariosDTO = localConHorarios.Horarios.Select(h => new HorarioDTO
+            {
+                ID = h.ID,
+                HoraInicio = h.HoraInicio,
+                HoraFin = h.HoraFin
+                // Añade aquí más propiedades si tu DTO las requiere
+            }).ToList();
+
+            // Si encuentra el local, lo devuelve como respuesta válida
+            return Ok(horariosDTO);
+        }
+
+        // Edita las imágenes del local.
+        [HttpPut("HorariosLocal/Edit/{id}")]
+        [Authorize]
+        public async Task<IActionResult> EditarHorariosLocal(int id, [FromBody] List<HorarioDTO> nuevosHorariosDTO)
+        {
+
+            // Busca un local en la base de datos por su ID
+            var localExistente = await _db.Locales
+                                .Include(l => l.Horarios)
+                                .Include(l => l.Reservas) // Incluye las reservas en la consulta
+                                .FirstOrDefaultAsync(l => l.ID == id);
+
+            // Si no encuentra el local, devuelve NotFound
+            if (localExistente == null) return NotFound($"No se encontró un local con el ID {id}.");
+
+            // Verifica si hay reservas existentes
+            if (localExistente.Reservas.Any())
+            {
+                return BadRequest("No se pueden modificar los horarios ya que existen reservas.");
+            }
+
+            // Elimina los horarios anteriores del local
+            _db.Horarios.RemoveRange(localExistente.Horarios);
+
+            // Mapea los HorarioDTO a la entidad Horario y los agrega al contexto
+            var nuevosHorarios = nuevosHorariosDTO.Select(dto => new Horario
+            {
+                // Asumiendo que Horario tiene una propiedad LocalID, y otras propiedades necesarias
+                LocalID = id,
+                HoraInicio = dto.HoraInicio,
+                HoraFin = dto.HoraFin
+                // Mapea el resto de propiedades que tu entidad Horario requiera
+            }).ToList();
+
+            // Agrega los nuevos horarios al local
+            foreach (var horario in nuevosHorarios)
+            {
+                _db.Horarios.Add(horario);
+            }
+
+            // Guarda los cambios en la base de datos
             await _db.SaveChangesAsync();
 
             return Ok();
