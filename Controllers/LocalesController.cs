@@ -12,7 +12,7 @@ namespace API_Proyecto.Controllers
     [ApiController]
     public class LocalesController : ControllerBase
     {
-        
+
         private readonly ReservacionesDbContext _db;
         private readonly IConfiguration _configuration;
 
@@ -28,7 +28,7 @@ namespace API_Proyecto.Controllers
         [Authorize]
         public async Task<IActionResult> ObtenerTodosLocales()
         {
-            
+
             // Busca el ID del usuario actual en los claims
             var claimUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -55,7 +55,7 @@ namespace API_Proyecto.Controllers
         [Authorize]
         public async Task<IActionResult> ObtenerLocalesArrendador()
         {
-            
+
             // Busca el ID del usuario actual en los claims
             var claimUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -172,7 +172,7 @@ namespace API_Proyecto.Controllers
             var imagenesLocal = await _db.Locales
                 .Include(l => l.Imagenes)
                 .FirstOrDefaultAsync(l => l.ID == id);
-            
+
             // Si no encuentra el local, devuelve "NotFound"
             if (imagenesLocal == null) return NotFound();
 
@@ -241,23 +241,14 @@ namespace API_Proyecto.Controllers
                 return BadRequest("No se pueden modificar los horarios ya que existen reservas.");
             }
 
-            // Elimina los horarios anteriores del local
-            _db.Horarios.RemoveRange(localExistente.Horarios);
+            var horariosList = localExistente.Horarios.ToList();
 
-            // Mapea los HorarioDTO a la entidad Horario y los agrega al contexto
-            var nuevosHorarios = nuevosHorariosDTO.Select(dto => new Horario
+            for (int i = 0; i < horariosList.Count; i++)
             {
-                // Asumiendo que Horario tiene una propiedad LocalID, y otras propiedades necesarias
-                LocalID = id,
-                HoraInicio = dto.HoraInicio,
-                HoraFin = dto.HoraFin
-                // Mapea el resto de propiedades que tu entidad Horario requiera
-            }).ToList();
-
-            // Agrega los nuevos horarios al local
-            foreach (var horario in nuevosHorarios)
-            {
-                _db.Horarios.Add(horario);
+                // Ahora puedes indexar porque horariosList es una List<Horario>
+                horariosList[i].HoraInicio = nuevosHorariosDTO[i].HoraInicio;
+                horariosList[i].HoraFin = nuevosHorariosDTO[i].HoraFin;
+                // Actualiza cualquier otra propiedad necesaria aquí
             }
 
             // Guarda los cambios en la base de datos
@@ -296,27 +287,29 @@ namespace API_Proyecto.Controllers
         // Edita las imágenes del local.
         [HttpPut("Imagenes/Edit/{localId}")]
         [Authorize]
-        public async Task<IActionResult> EditarImagenesLocal(int localId, [FromBody] List<ImagenLocal> imagenesNuevas)
+        public async Task<IActionResult> EditarImagenesLocal(int localId, [FromBody] List<ImagenLocalDTO> imagenesNuevasDTO)
         {
-
             // Busca un local en la base de datos por su ID
             var localExistente = await _db.Locales
                 .Include(l => l.Imagenes)
                 .FirstOrDefaultAsync(l => l.ID == localId);
 
             // Si no encuentra el local, devuelve NotFound
-            if (localExistente == null) return NotFound();
+            if (localExistente == null) return NotFound($"No se encontró un local con el ID {localId}.");
 
-            // Elimina las imágenes anteriores del local
-            _db.ImagenesLocal.RemoveRange(localExistente.Imagenes);
+            // Verifica que la cantidad de imágenes existentes y las nuevas sea la misma
+            if (localExistente.Imagenes.Count != imagenesNuevasDTO.Count)
+                return BadRequest("La cantidad de imágenes proporcionadas no coincide con las existentes.");
 
-            // Agrega las imágenes nuevas al local
-            foreach (var imagen in imagenesNuevas)
+            // Actualiza las imágenes existentes
+            var imagenesList = localExistente.Imagenes.ToList();
+            for (int i = 0; i < imagenesList.Count; i++)
             {
-                imagen.Local = localExistente;
-                await _db.ImagenesLocal.AddAsync(imagen);
+                // Aquí asumimos que ImagenLocalDTO tiene las propiedades necesarias para actualizar ImagenLocal
+                imagenesList[i].Url = imagenesNuevasDTO[i].Url;
             }
 
+            // Guarda los cambios en la base de datos
             await _db.SaveChangesAsync();
 
             return Ok();

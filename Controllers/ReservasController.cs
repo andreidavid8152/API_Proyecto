@@ -69,7 +69,7 @@ namespace API_Proyecto.Controllers
             }
 
             // Realizamos una peticion a la base de datos para ver si la reserva ya existe
-            var existeReserva = await _db.Reservas.AnyAsync(r => r.LocalID == reserva.LocalID && r.HorarioID == reserva.HorarioID && r.Fecha == reserva.Fecha);
+            var existeReserva = await _db.Reservas.AnyAsync(r => r.LocalID == reserva.LocalID && r.HorarioID == reserva.HorarioID && r.Fecha.Date == reserva.Fecha.Date);
 
             // Si la reserva ya existe, regresamos un error 400 con un mensaje
             if (existeReserva)
@@ -91,7 +91,7 @@ namespace API_Proyecto.Controllers
         public async Task<IActionResult> VerificarDisponibilidad(int localId, int horarioId, DateTime fecha)
         {
             // Realizamos una peticion a la base de datos para ver si la reserva ya existe
-            var existeReserva = await _db.Reservas.AnyAsync(r => r.LocalID == localId && r.HorarioID == horarioId && r.Fecha == fecha);
+            var existeReserva = await _db.Reservas.AnyAsync(r => r.LocalID == localId && r.HorarioID == horarioId && r.Fecha.Date == fecha.Date);
 
             // Devuelve true si la reserva no existe, false si ya existe
             return Ok(!existeReserva);
