@@ -32,7 +32,7 @@ namespace API_Proyecto.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
-            
+
             // Peticion que busca al usuario por el username
             Usuario usuarioEncontrado = await _db.Usuarios.FirstOrDefaultAsync(x => x.Username == loginModel.Username);
 
@@ -42,7 +42,7 @@ namespace API_Proyecto.Controllers
                 return BadRequest("Usuario no encontrado.");
             }
 
-            if(usuarioEncontrado.Username != "admin")
+            if (usuarioEncontrado.Username != "admin")
             {
                 return BadRequest("Acceso restringido.");
             }
@@ -177,7 +177,7 @@ namespace API_Proyecto.Controllers
                 return BadRequest("Id de usuario inválido.");
             }
 
-            if(usuario.Id != 0)
+            if (usuario.Id != 0)
             {
                 userId = usuario.Id;
             }
@@ -262,7 +262,7 @@ namespace API_Proyecto.Controllers
             }
 
             // Se busca el usuario en la base de datos
-            List<Usuario> usuarios = await _db.Usuarios.ToListAsync();
+            List<Usuario> usuarios = await _db.Usuarios.Where(u => u.Id != 1).ToListAsync();
 
             // Si no se encuentra el usuario, se retorna un error
             if (usuarios == null)
